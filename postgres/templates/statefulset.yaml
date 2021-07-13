@@ -1,30 +1,29 @@
----
 {{- $fullName    := include "postgres.fullname" . -}}
 {{- $secretName  := default $fullName .Values.secretName -}}
 {{- $configName  := default $fullName .Values.configName -}}
+---
 apiVersion:                      apps/v1
 kind:                            StatefulSet
 metadata:
-  name:                          {{ template "postgres.fullname" . }}
+  name:                          {{ $fullName }}
   labels:
-{{ include "postgres.labels" . | indent 4 }}
+    {{- include "postgres.labels" . | nindent 4 }}
 spec:
-  serviceName:                   postgres
+  serviceName:                   {{ $fullName }}
   replicas:                      1
   selector:
     matchLabels:
-      app:                       postgres
+      {{- include "postgres.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app:                     postgres
+        {{- include "postgres.selectorLabels" . | nindent 8 }}
     spec:
       containers:
         - name:                  postgres
-          image:                 "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image:                 {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy:       {{ .Values.image.pullPolicy }}
           envFrom:
-            - secretRef:
-                name:            {{ $secretName }}
             - configMapRef:
                 name:            {{ $configName }}
           ports:
@@ -35,6 +34,9 @@ spec:
           volumeMounts:
             - name:              pgdata
               mountPath:         /var/lib/postgresql
+            - name:              pg-pass
+              mountPath:         /secrets
+              readOnly:          true
           readinessProbe:
             exec:
               command:
@@ -56,34 +58,25 @@ spec:
                 - pg_isready
                 - --dbname=$POSTGRES_DB
                 - --username=$POSTGRES_USER
-            initialDelaySeconds: 45
+            initialDelaySeconds: 30
             timeoutSeconds:      5
             failureThreshold:    3
             periodSeconds:       10
             successThreshold:    1
-      initContainers:
-        - name:                  init
-          image:                 busybox
-          volumeMounts:
-            - mountPath:         /var/lib/postgresql
-              name:              pgdata
-              subPath:           data
-          command:
-            - /bin/sh
-            - -c
-            - chown -R 70:70 /var/lib/postgresql
       volumes:
+        - name:                  pg-pass
+          secret:
+            secretName:          {{ $secretName }}
         - name:                  pgdata
           persistentVolumeClaim:
             claimName:           pgdata
   volumeClaimTemplates:
-
     - metadata:
         name:                    pgdata
       spec:
         accessModes:
           - ReadWriteOnce
-        storageClassName:        hostpath
+        storageClassName:        {{ .Values.storage.className }}
         resources:
           requests:
-            storage:             512Mi
+            storage:             {{ .Values.storage.size }}

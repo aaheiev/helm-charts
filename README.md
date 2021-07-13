@@ -1,16 +1,24 @@
-# helm-charts
+# Charts
 
-debug
+- [x] PostgreSQL
+- [ ] MySQL
+- [ ] Redis
+- [ ] RabbitMQ
+- [ ] ChartMuseum
+
+## PostgreSQL
+
+### debug
 ```shell
-helm upgrade --install --debug --dry-run --create-namespace --wait --namespace=dev01 postgres ./postgres
+helm upgrade --install --debug --dry-run --namespace=dev01 my-db1 ./postgres
 ```
 
-deploy
+### deploy
 ```shell
-helm upgrade --install --create-namespace --wait --namespace=dev01 postgres ./postgres
+helm upgrade --install --create-namespace --wait --namespace=dev01 my-db1 ./postgres
 ```
 
-delete
+### delete
 ```shell
-helm delete --namespace=dev01 postgres
+helm delete --namespace=dev01 my-db1
 ```
