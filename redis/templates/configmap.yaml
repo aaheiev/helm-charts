@@ -1,0 +1,18 @@
+{{- $fullName    := include "redis.fullname" . -}}
+{{- $configName  := default $fullName .Values.configName -}}
+{{- if .Values.config -}}
+---
+apiVersion:                       v1
+kind:                             ConfigMap
+metadata:
+  name:                           {{ $configName }}
+  labels:
+{{ include "redis.labels" . | indent 4 }}
+data:
+  slave.conf:      |
+    slaveof        {{ $fullName }} 6379
+    maxmemory      1g
+{{- range $name, $value := .Values.config }}
+  {{ $name }}: {{ $value | quote }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,57 @@
+nameOverride:     ""
+fullnameOverride: ""
+replicaCount:     3
+
+#configName: customConfigMap
+config:
+  master.conf:     |
+    bind           0.0.0.0
+    protected-mode yes
+    port           6379
+    tcp-backlog    511
+    timeout        0
+    tcp-keepalive  300
+    daemonize      no
+    supervised     no
+    pidfile        /var/run/redis_6379.pid
+    loglevel       notice
+    logfile        ""
+    maxmemory      1g
+
+image:
+  repository:      redis
+  pullPolicy:      IfNotPresent
+  tag:             ""
+
+imagePullSecrets:  []
+
+serviceAccount:
+  create:          true
+  annotations:     {}
+  name:            ""
+
+service:
+  type:            ClusterIP
+  port:            6379
+
+resources:
+  requests:
+    cpu:           50m
+    memory:        256Mi
+  limits:
+    cpu:           500m
+    memory:        1Gi
+
+configStorage:
+  className:       hostpath
+  size:            100Mi
+
+dataStorage:
+  className:       hostpath
+  size:            1Gi
+
+podAnnotations: {}
+podSecurityContext: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
